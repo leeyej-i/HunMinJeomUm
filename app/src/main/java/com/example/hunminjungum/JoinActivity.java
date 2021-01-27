@@ -1,6 +1,7 @@
 package com.example.hunminjungum;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -30,6 +31,7 @@ import java.net.URLEncoder;
 
 public class JoinActivity extends Activity {
     EditText et_name, et_email, et_id, et_passwd, et_passwdchk;
+    private boolean validate=false;
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
@@ -42,6 +44,62 @@ public class JoinActivity extends Activity {
         et_passwdchk = (EditText)findViewById(R.id.passwd_check);
         Button id_ck = (Button)findViewById(R.id.id_check);
         Button signup = (Button)findViewById(R.id.signup);
+        Button cancel = (Button)findViewById(R.id.cancel);
+
+        cancel.setOnClickListener(new View.OnClickListener(){
+            public void onClick(View v){
+                finish();
+            }
+        });
+        id_ck.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                    String userID=et_id.getText().toString();
+                    if(validate)
+                    {
+                        return;
+                    }
+                    if(userID.equals("")){
+                        AlertDialog.Builder builder=new AlertDialog.Builder( JoinActivity.this );
+                        builder.setMessage("아이디를 입력하세요.")
+                                .setPositiveButton("확인",null)
+                                .create()
+                                .show();
+                        return;
+                    }
+                    Response.Listener<String> responseListener=new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            try {
+                                JSONObject jsonResponse=new JSONObject(response);
+                                boolean success=jsonResponse.getBoolean("success");
+                                if(success){
+                                    AlertDialog.Builder builder=new AlertDialog.Builder( JoinActivity.this );
+                                    builder.setMessage("사용할 수 있는 아이디입니다.")
+                                            .setPositiveButton("확인",null)
+                                            .create()
+                                            .show();
+                                    et_id.setEnabled(false);
+                                    validate=true;
+                                }
+                                else{
+                                    AlertDialog.Builder builder=new AlertDialog.Builder( JoinActivity.this );
+                                    builder.setMessage("사용할 수 없는 아이디입니다.")
+                                            .setNegativeButton("확인",null)
+                                            .create()
+                                            .show();
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    };
+                    IdcheckRequest idcheckRequest=new IdcheckRequest(userID,responseListener);
+                    RequestQueue queue= Volley.newRequestQueue(JoinActivity.this);
+                    queue.add(idcheckRequest);
+
+            }
+        });
         signup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -50,79 +108,54 @@ public class JoinActivity extends Activity {
                 String sId = et_id.getText().toString();
                 String sPw = et_passwd.getText().toString();
                 String sPw_chk = et_passwdchk.getText().toString();
-                insertoToDatabase(sName,sEmail,sId,sPw);
-            }
+                if(sPw.equals(sPw_chk)){
+                    Response.Listener<String> responseListener = new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            try {
+                                JSONObject jsonObject = new JSONObject(response);
+                                boolean success = jsonObject.getBoolean("success");
+                                if (success) { // 회원등록에 성공한 경우
+                                    Toast.makeText(getApplicationContext(),"회원 가입을 축하합니다.",Toast.LENGTH_SHORT).show();
+                                    AlertDialog.Builder builder = new AlertDialog.Builder(JoinActivity.this);
+                                    builder.setMessage("회원 가입을 축하합니다.")
+                                            .setPositiveButton("ok", null)
+                                            .create()
+                                            .show();
+                                    Intent intent = new Intent(JoinActivity.this, LoginActivity.class);
+                                    startActivity(intent);
+                                } else { // 회원등록에 실패한 경우
+                                    Toast.makeText(getApplicationContext(),"회원 가입에 실패하였습니다.",Toast.LENGTH_SHORT).show();
+                                    //알림상자를 만들어서 보여줌
+                                    AlertDialog.Builder builder = new AlertDialog.Builder(JoinActivity.this);
+                                    builder.setMessage("회원 가입에 실패하였습니다.")
+                                            .setNegativeButton("ok", null)
+                                            .create()
+                                            .show();
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
 
-        });
-        Button cancel = (Button)findViewById(R.id.cancel);
-        cancel.setOnClickListener(new View.OnClickListener(){
-            public void onClick(View v){
-                finish();
-
-            }
-        });
-    }
-
-    private void insertoToDatabase(final String name, String mail, String id, String passwd) {
-        class InsertData extends AsyncTask<String, Void, String> {
-            ProgressDialog loading;
-
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-                loading = ProgressDialog.show(JoinActivity.this, "Please Wait", null, true, true);
-            }
-
-            @Override
-            protected void onPostExecute(String s) {
-                super.onPostExecute(s);
-                loading.dismiss();
-                //Log.d("Tag : ", s); // php에서 가져온 값을 최종 출력함
-                Toast.makeText(getApplicationContext(), s, Toast.LENGTH_LONG).show();
-            }
-
-            @Override
-            protected String doInBackground(String... params) {
-
-                try {
-                    String et_name = (String) params[0];
-                    String et_email = (String) params[1];
-                    String et_id = (String) params[2];
-                    String et_passwd = (String) params[3];
-
-                    String link = "http://192.168.43.21/join.php";
-                    String data = URLEncoder.encode("name", "UTF-8") + "=" + URLEncoder.encode(et_name, "UTF-8");
-                    data += "&" + URLEncoder.encode("mail", "UTF-8") + "=" + URLEncoder.encode(et_email, "UTF-8");
-                    data += "&" + URLEncoder.encode("id", "UTF-8") + "=" + URLEncoder.encode(et_id, "UTF-8");
-                    data += "&" + URLEncoder.encode("passwd", "UTF-8") + "=" + URLEncoder.encode(et_passwd, "UTF-8");
-                    URL url = new URL(link);
-                    URLConnection conn = url.openConnection();
-
-                    conn.setDoOutput(true);
-                    OutputStreamWriter outputStreamWriter = new OutputStreamWriter(conn.getOutputStream());
-                    outputStreamWriter.write(data);
-                    outputStreamWriter.flush();
-
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-
-                    StringBuilder sb = new StringBuilder();
-                    String line = null;
-
-                    // Read Server Response
-                    while ((line = reader.readLine()) != null) {
-                        sb.append(line);
-                        break;
-                    }
-                    Log.d("tag : ", sb.toString()); // php에서 결과값을 리턴
-                    return sb.toString();
-
-                } catch (Exception e) {
-                    return new String("Exception: " + e.getMessage());
+                        }
+                    };
+                    // 서버로 Volley를 이용해서 요청을 함.
+                    JoinRequest joinRequest = new JoinRequest(sId,sPw,sEmail,sName, responseListener);
+                    RequestQueue queue = Volley.newRequestQueue(JoinActivity.this);
+                    queue.add(joinRequest);
                 }
-            }
-        }
-        InsertData task = new InsertData();
-        task.execute(name, mail, id, passwd);
-    }
+                else
+                {
+                    Toast.makeText(getApplicationContext(),"비밀번호가 일치하지 않습니다.",Toast.LENGTH_SHORT).show();
+                    AlertDialog.Builder builder = new AlertDialog.Builder(JoinActivity.this);
+                    builder.setMessage("비밀번호가 일치하지 않습니다.")
+                            .setPositiveButton("ok", null)
+                            .create()
+                            .show();
+                }
 
+
+            }
+        });
+    }
 }

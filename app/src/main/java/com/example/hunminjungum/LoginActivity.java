@@ -28,11 +28,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.sql.SQLException;
 
 public class LoginActivity extends Activity {
     EditText et_id, et_passwd;
@@ -55,14 +58,15 @@ public class LoginActivity extends Activity {
             public void onClick(View v) {
                 sId = et_id.getText().toString();
                 sPw = et_passwd.getText().toString();
-                Response.Listener<String> responseLitsner = new Response.Listener<String>() {
+                Response.Listener<String> responseListener = new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         try {
                             JSONObject jsonObject = new JSONObject(response);
                             boolean success = jsonObject.getBoolean("success");
+
                             if (success) {
-                                SharedPreferences sharedPreferences = getSharedPreferences("ex",MODE_PRIVATE);
+                                SharedPreferences sharedPreferences = getSharedPreferences("login", MODE_PRIVATE);
                                 SharedPreferences.Editor editor = sharedPreferences.edit();
                                 editor.putString("id", sId);
                                 editor.commit();
@@ -71,11 +75,9 @@ public class LoginActivity extends Activity {
                                 String userPass = jsonObject.getString("passwd");
                                 AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
                                 dialog = builder.setMessage("로그인에 성공했습니다").setPositiveButton("확인", null).create();
-
                                 dialog.show();
                                 Intent intent = new Intent(LoginActivity.this, SecondActivity.class);
-                                LoginActivity.this.startActivity(intent);
-                                finish();
+                                startActivity(intent);
                             } else {
                                 AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
                                 dialog = builder.setMessage("아이디과 비밀번호가 일치하지 않습니다.").setNegativeButton("다시 시도", null).create();
@@ -86,22 +88,17 @@ public class LoginActivity extends Activity {
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
+                            StringWriter sw = new StringWriter();
+                            e.printStackTrace(new PrintWriter(sw));
+                            String exceptionAsString = sw.toString();
+                            Log.e("StackTrace", exceptionAsString);
                         }
                     }
                 };
-                LoginRequest loginRequest = new LoginRequest(sId, sPw, responseLitsner);
+                LoginRequest loginRequest = new LoginRequest(sId, sPw, responseListener);
                 RequestQueue queue = Volley.newRequestQueue(LoginActivity.this);
                 queue.add(loginRequest);
             }
         });
-
-    }
-    @Override
-    protected void onStop(){
-        super.onStop();
-        if (dialog != null) {//다이얼로그가 켜져있을때 함부로 종료가 되지 않게함
-            dialog.dismiss();
-            dialog = null;
-        }
     }
 }

@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
@@ -54,68 +55,67 @@ public class JoinActivity extends Activity {
         id_ck.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                    String userID=et_id.getText().toString();
-                    if(validate)
-                    {
-                        return;
-                    }
-                    if(userID.equals("")){
-                        AlertDialog.Builder builder=new AlertDialog.Builder( JoinActivity.this );
-                        builder.setMessage("아이디를 입력하세요.")
-                                .setPositiveButton("확인",null)
-                                .create()
-                                .show();
-                        return;
-                    }
-                    Response.Listener<String> responseListener=new Response.Listener<String>() {
-                        @Override
-                        public void onResponse(String response) {
-                            try {
-                                JSONObject jsonResponse=new JSONObject(response);
-                                boolean success=jsonResponse.getBoolean("success");
-                                if(success){
-                                    AlertDialog.Builder builder=new AlertDialog.Builder( JoinActivity.this );
-                                    builder.setMessage("사용할 수 있는 아이디입니다.")
-                                            .setPositiveButton("확인",null)
-                                            .create()
-                                            .show();
-                                    et_id.setEnabled(false);
-                                    validate=true;
-                                }
-                                else{
-                                    AlertDialog.Builder builder=new AlertDialog.Builder( JoinActivity.this );
-                                    builder.setMessage("사용할 수 없는 아이디입니다.")
-                                            .setNegativeButton("확인",null)
-                                            .create()
-                                            .show();
-                                }
-                            } catch (JSONException e) {
-                                e.printStackTrace();
+                String userID = et_id.getText().toString();
+                if (validate) {
+                    return;
+                }
+                if (userID.equals("")) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(JoinActivity.this);
+                    builder.setMessage("아이디를 입력하세요.")
+                            .setPositiveButton("확인", null)
+                            .create()
+                            .show();
+                    return;
+                }
+                Response.Listener<String> responseListener = new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            String tag = "asdf";
+                            JSONObject jsonResponse = new JSONObject(response);
+                            Log.d(tag, response);
+                            boolean success = jsonResponse.getBoolean("success");
+                            if (success) {
+                                AlertDialog.Builder builder = new AlertDialog.Builder(JoinActivity.this);
+                                builder.setMessage("사용할 수 있는 아이디입니다.")
+                                        .setPositiveButton("확인", null)
+                                        .create()
+                                        .show();
+                                et_id.setEnabled(false);
+                                validate = true;
+                            } else {
+                                AlertDialog.Builder builder = new AlertDialog.Builder(JoinActivity.this);
+                                builder.setMessage("사용할 수 없는 아이디입니다.")
+                                        .setNegativeButton("확인", null)
+                                        .create()
+                                        .show();
                             }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
                         }
-                    };
-                    IdcheckRequest idcheckRequest=new IdcheckRequest(userID,responseListener);
-                    RequestQueue queue= Volley.newRequestQueue(JoinActivity.this);
-                    queue.add(idcheckRequest);
-
+                    }
+                };
+                IdcheckRequest idcheckRequest = new IdcheckRequest(userID, responseListener);
+                RequestQueue queue = Volley.newRequestQueue(JoinActivity.this);
+                queue.add(idcheckRequest);
             }
         });
         signup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String sName = et_name.getText().toString();
-                String sEmail = et_email.getText().toString();
-                String sId = et_id.getText().toString();
-                String sPw = et_passwd.getText().toString();
+                final String sName = et_name.getText().toString();
+                final String sEmail = et_email.getText().toString();
+                final String sPw = et_passwd.getText().toString();
+                final String sId = et_id.getText().toString();
                 String sPw_chk = et_passwdchk.getText().toString();
                 if(sPw.equals(sPw_chk)){
-                    Response.Listener<String> responseListener = new Response.Listener<String>() {
+                        Response.Listener<String> responseListener = new Response.Listener<String>() {
                         @Override
                         public void onResponse(String response) {
                             try {
                                 JSONObject jsonObject = new JSONObject(response);
                                 boolean success = jsonObject.getBoolean("success");
-                                if (success) { // 회원등록에 성공한 경우
+                                if (success) {
                                     Toast.makeText(getApplicationContext(),"회원 가입을 축하합니다.",Toast.LENGTH_SHORT).show();
                                     AlertDialog.Builder builder = new AlertDialog.Builder(JoinActivity.this);
                                     builder.setMessage("회원 가입을 축하합니다.")
@@ -124,9 +124,8 @@ public class JoinActivity extends Activity {
                                             .show();
                                     Intent intent = new Intent(JoinActivity.this, LoginActivity.class);
                                     startActivity(intent);
-                                } else { // 회원등록에 실패한 경우
+                                } else {
                                     Toast.makeText(getApplicationContext(),"회원 가입에 실패하였습니다.",Toast.LENGTH_SHORT).show();
-                                    //알림상자를 만들어서 보여줌
                                     AlertDialog.Builder builder = new AlertDialog.Builder(JoinActivity.this);
                                     builder.setMessage("회원 가입에 실패하였습니다.")
                                             .setNegativeButton("ok", null)
@@ -139,8 +138,13 @@ public class JoinActivity extends Activity {
 
                         }
                     };
-                    // 서버로 Volley를 이용해서 요청을 함.
-                    JoinRequest joinRequest = new JoinRequest(sId,sPw,sEmail,sName, responseListener);
+                        Response.ErrorListener errorListener = new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Toast.makeText(getApplicationContext(), String.valueOf(error), Toast.LENGTH_SHORT).show();
+                        }
+                    };
+                    JoinRequest joinRequest = new JoinRequest(sId,sPw,sEmail,sName, responseListener, errorListener);
                     RequestQueue queue = Volley.newRequestQueue(JoinActivity.this);
                     queue.add(joinRequest);
                 }
@@ -153,8 +157,6 @@ public class JoinActivity extends Activity {
                             .create()
                             .show();
                 }
-
-
             }
         });
     }

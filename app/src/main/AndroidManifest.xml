@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.hunminjungum">
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:usesCleartextTraffic="true"
         android:allowBackup="true"
@@ -16,7 +16,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".SecondActivity" android:label="두번째메인"/>
+        <activity android:name=".SecondActivity" android:label="두번째메인"
+            android:theme="@style/AppTheme"/>
         <activity android:name=".JoinActivity" android:label="회원가입">
         <intent-filter>
             <action android:name="android.intent.action.MAIN" />
@@ -29,6 +30,21 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
         </activity>
+        <activity android:name=".ModifyActivity" android:label="회원정보수정"/>
+        <activity android:name=".CommunityActivity" android:label="커뮤니티"/>
+        <activity android:name=".WriteFreeActivity" android:label="자유게시판"/>
+        <activity android:name=".OcrActivity" android:label="최근번역목록"/>
+        <activity android:name=".FreeBoardListView" android:label="자유게시판상세히"/>
+        <activity android:name=".ModifyFreeBoard" android:label="자유게시판수정"/>
+        <activity android:name=".WriteInfoActivity" android:label="정보게시판"/>
+        <activity android:name=".WriteSuggestActivity" android:label="건의게시판"/>
+        <activity android:name=".WriteReportActivity" android:label="신고게시판"/>
+        <activity android:name=".ModifyInfoBoard" android:label="정보게시판수정"/>
+        <activity android:name=".InfoBoardListView" android:label="정보게시판상세히"/>
+        <activity android:name=".ModifySuggestBoard" android:label="건의게시판수정"/>
+        <activity android:name=".SuggestBoardListView" android:label="건의게시판상세히"/>
+        <activity android:name=".ModifyReportBoard" android:label="신고게시판수정"/>
+        <activity android:name=".ReportBoardListView" android:label="신고게시판상세히"/>
     </application>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
